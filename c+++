@@ -1,0 +1,63 @@
+#include <iostream>
+#include<vector>
+#include<chrono>
+#include<thread>
+#include<mutex>
+std::mutex mtx;
+using namespace std::chrono;
+using namespace std;
+void CreateVector(vector<int>& v, int n,int start,int end)
+{
+	srand(time(0));
+	for (int j = 0; j < n; j++)
+		v[j] = rand() % (end - start + 1)+start;
+}
+void PrintVector(vector<int>v, int n)
+{
+	for (int i = 0; i < n; i++)
+		cout << v[i] << " ";
+}
+void multiply(const vector<int>&v1,const vector<int>&v2,long long &res,int start,int end)
+{
+	long long partial_sum = 0;
+	for (int j = start; j < end; ++j) {
+		partial_sum += v1[j] * v2[j];
+	}
+	res += partial_sum;
+}
+int main()
+{
+	vector<int>v1;
+	vector<int>v2;
+	int start = 1, end = 100;
+	long long res=0;
+	int n;
+	setlocale(LC_ALL, "RU");
+	unsigned long long Time = 0;
+	int Th = 4;
+	vector<thread>threads;
+	cin >> n;
+	v1.resize(n);
+	v2.resize(n);
+	CreateVector(v1, n,start,end);
+	CreateVector(v2, n, start, end);
+	auto start_time = high_resolution_clock::now();
+	for (int i = 0; i < Th; ++i) {
+		int start = i * (n / Th);
+		int end = (i + 1) * (n / Th);
+		if (i == Th - 1) end = n;
+		threads.emplace_back(multiply, cref(v1), cref(v2), ref(res), start, end);
+	}
+	for (auto& thread : threads) {
+		thread.join();
+	}
+	auto end_time = high_resolution_clock::now();
+	Time = duration_cast<milliseconds>(end_time - start_time).count();
+	cout << endl << res<<"Time:"<<Time;
+	cout << endl; 
+	PrintVector(v1, n);
+	cout << endl;
+	PrintVector(v2, n);
+	return 0;
+
+}
