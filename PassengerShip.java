@@ -1,16 +1,56 @@
-class PassengerShip extends Ship{
-    private int passengerCapacity;
-    private int boats;
-    PassengerShip(String name,double weight,double len,double x,double y,double speed,int passengerCapacity, int maxPassengerCapacity, int boats) {
-        super(name,weight,len,x,y,speed,maxPassengerCapacity);
-        this.passengerCapacity = passengerCapacity;
-        this.boats = boats;
+public class PassengerShip extends Ship {
+    int numberOfSeats;
+    int numberOfLifeboats;
+
+    public PassengerShip(String name, double displacement, double length, double xCoordinate, double yCoordinate, double speed, int numberOfSeats, int numberOfLifeboats) {
+        super(name, displacement, length, xCoordinate, yCoordinate, speed);
+        this.numberOfSeats = numberOfSeats;
+        this.numberOfLifeboats = numberOfLifeboats;
     }
-    public int SavePassengers(){
-        return 10*boats;
+
+    public String toString(){
+        return super.toString()+"\n Количество мест: "+numberOfSeats+"\n Количество спасательных шлюпок: "+numberOfLifeboats;
     }
-    public int getPassengerCapacity() { return passengerCapacity; }
-    public int getBoats() { return boats; }
-    public void setPassengerCapacity(int passengerCapacity) { this.passengerCapacity = passengerCapacity;}
-    public void setBoats(int boats) { this.boats = boats; }
+    public int calculateNumberOfSavedPassengers() {
+        return numberOfLifeboats * 10; // Предположим, что каждая шлюпка вмещает 10 человек
+    }
+
+    public boolean isOvercrowded() {
+        return numberOfSeats > 1000; // Например, если количество мест больше 1000
+    }
+
+    public double getPassengerDensity() {
+        return numberOfSeats / displacement; // Пассажиров на единицу водоизмещения
+    }
+
+    public void embarkPassengers(int numPassengers) {
+        //Посадка пассажиров
+        numberOfSeats += numPassengers;
+    }
+
+    public void disembarkPassengers(int numPassengers) {
+        //Высадка пассажиров
+        numberOfSeats -= numPassengers;
+        if (numberOfSeats < 0) {
+            numberOfSeats = 0;
+        }
+    }
+
+    public void launchLifeboats(int numLifeboats) {
+        //Запуск спасательных шлюпок
+        numberOfLifeboats -= numLifeboats;
+        if (numberOfLifeboats < 0) {
+            numberOfLifeboats = 0;
+        }
+    }
+
+    public void deployEmergencySystems() {
+        // Активация аварийной системы
+        System.out.println("Активированы аварийные системы.");
+    }
+
+    public void setNumberOfSeats(int numberOfSeats){this.numberOfSeats=numberOfSeats;}
+    public void setNumberOfLifeboats(int numberOfLifeboats){this.numberOfLifeboats=numberOfLifeboats;}
+    public int getNumberOfSeats(){return numberOfSeats;}
+    public int getNumberOfLifeboats(){return numberOfLifeboats;}
 }

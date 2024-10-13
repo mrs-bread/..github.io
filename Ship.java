@@ -1,39 +1,61 @@
-class Ship {
-    private String name;
-    private double weight;
-    private double len;
-    private double speed;
-    private double x;
-    private double y;
-    private int maxPassengersCapacity;
-    Ship(String name,double weight,double len,double x,double y,double speed,int maxPassengersCapacity) {
-        this.name=name;
-        this.weight=weight;
-        this.len=len;
-        this.x=x;
-        this.y=y;
-        this.speed=speed;
-        this.maxPassengersCapacity=maxPassengersCapacity;
+public class Ship {
+    String name;
+    double displacement;
+    double length;
+    double xCoordinate;
+    double yCoordinate;
+    double speed;
+
+    public Ship(String name, double displacement, double length, double xCoordinate, double yCoordinate, double speed) {
+        this.name = name;
+        this.displacement = displacement;
+        this.length = length;
+        this.xCoordinate = xCoordinate;
+        this.yCoordinate = yCoordinate;
+        this.speed = speed;
     }
+
     public String toString(){
-        return "Name: "+name+"\n Weight: "+weight+"\n Length: "+len+"\n X: "+x+"\n Y: "+y+"\n Speed: "+speed+"\n Max Passengers: "+maxPassengersCapacity;
+        return "Название: "+name+"\n Водоизмещение: "+displacement+"\n Длина: "+length+"\n Координата х: "+xCoordinate+"\n Координата у: "+yCoordinate+"\n Скорость: "+speed;
     }
-    public String getName() {return name;}
-    public double getWeight() {return weight;}
-    public double getLen() {return len;}
-    public double getX() {return x;}
-    public double getY() {return y;}
-    public double getSpeed() {return speed;}
-    public int getMaxPassengersCapacity() {return maxPassengersCapacity;}
+
+    public void move(double dx, double dy) {
+        xCoordinate += dx;
+        yCoordinate += dy;
+    }
+
+    public double calculateDistanceTo(double targetX, double targetY) {
+        return Math.sqrt(Math.pow(targetX - xCoordinate, 2) + Math.pow(targetY - yCoordinate, 2));
+    }
+
+    public void accelerate(double acceleration) {
+        speed += acceleration;
+    }
+
+    public void decelerate(double deceleration) {
+        speed -= deceleration;
+        if (speed < 0) {
+            speed = 0;
+        }
+    }
+
+    public void changeCourse(double angle) {
+        System.out.println("Курс изменен на " + angle + " градусов.");
+    }
+
+    public void stop() {
+        speed = 0;
+    }
     public void setName(String name){this.name=name;}
-    public void setWeight(double weight){this.weight=weight;}
-    public void setLen(double len){this.len=len;}
-    public void setX(double x){this.x=x;}
-    public void setY(double y){this.y=y;}
+    public void setDisplacement(double displacement){this.displacement=displacement;}
+    public void setLength(double length){this.length=length;}
+    public void setxCoordinate(double xCoordinate){this.xCoordinate=xCoordinate;}
+    public void setyCoordinate(double yCoordinate){this.yCoordinate=yCoordinate;}
     public void setSpeed(double speed){this.speed=speed;}
-    public void setMaxPassengersCapacity(int MaxPassengersCapacity){this.maxPassengersCapacity=MaxPassengersCapacity;}
-    public void move(){
-        x+=speed;
-        y+=speed;
-    }
+    public String getName(){return name;}
+    public double getDisplacement(){return displacement;}
+    public double getLength(){return length;}
+    public double getxCoordinate(){return xCoordinate;}
+    public double getyCoordinate(){return yCoordinate;}
+    public double getSpeed(){return speed;}
 }
