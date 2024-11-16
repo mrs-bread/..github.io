@@ -1,0 +1,148 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <vector>
+#include <cstdlib>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <linux/fs.h>
+#include <stdio.h>
+#include <sys/mount.h>
+#include <sys/ptrace.h>
+
+using namespace std;
+
+bool is_exit_command(const string& command) {
+    return command == "exit" || command == "\\q";
+}
+
+vector<string> history;
+const string history_file = ".myshell_history";
+
+void load_history() {
+    ifstream file(history_file);
+    string line;
+    while (getline(file, line)) {
+        history.push_back(line);
+    }
+}
+
+void save_history() {
+    ofstream file(history_file);
+    for (auto &command : history) {
+        file << command << endl;
+    }
+}
+
+void handle_echo(const string& command) {
+    cout << command.substr(5) << endl;
+}
+
+void handle_env(const string& command) {
+    string var = command.substr(3);
+    if (var.find("$") == 0) {
+        cout << getenv(var.substr(1).c_str()) << endl;
+    }
+}
+
+void handle_execute(const string& command) {
+    if (fork() == 0) {
+        char *argv[2] = {const_cast<char*>(command.c_str()), nullptr};
+        execvp(argv[0], argv);
+        perror("execvp failed");
+        exit(1);
+    } else {
+        wait(nullptr);
+    }
+}
+
+void sighup_handler(int signum) {
+    cout << "Configuration reloaded" << endl;
+}
+
+void print_partition_info(const char *device) {
+    int fd = open(device, O_RDONLY);
+    if (fd == -1) {
+        perror("open failed");
+        return;
+    }
+
+    struct statfs buf;
+    if (fstatfs(fd, &buf) == -1) {
+        perror("fstatfs failed");
+        close(fd);
+        return;
+    }
+
+    printf("Filesystem type: %s\n", buf.f_type);
+    printf("Block size: %lu\n", buf.f_bsize);
+    printf("Blocks available: %lu\n", buf.f_bavail);
+    printf("Blocks used: %lu\n", buf.f_blocks - buf.f_bavail);
+    printf("Total blocks: %lu\n", buf.f_blocks);
+
+    close(fd);
+}
+
+void handle_partition_info(const string& command) {
+    string device = command.substr(3);
+    print_partition_info(device.c_str());
+}
+
+void mount_cron(const char *path) {
+    if (mount("cron", path, "cron", 0, nullptr) == -1) {
+        perror("mount failed");
+    }
+}
+
+void handle_cron(const string& command) {
+    mount_cron("/tmp/vfs");
+}
+
+void dump_memory(pid_t pid) {
+    long addr = 0;
+    while (true) {
+        long word = ptrace(PTRACE_PEEKTEXT, pid, addr, nullptr);
+        if (word == -1) {
+            break;
+        }
+        printf("%08lx: %08lx\n", addr, word);
+        addr += sizeof(long);
+    }
+}
+
+void handle_mem(const string& command) {
+    string procid_str = command.substr(5);
+    pid_t procid = stoi(procid_str);
+    dump_memory(procid);
+}
+
+int main() {
+    load_history();
+    string command;
+    signal(SIGHUP, sighup_handler);
+    while (getline(cin, command)) {
+        if (is_exit_command(command)) {
+            break;
+        } else if (command.find("echo ") == 0) {
+            handle_echo(command);
+        } else if (command.find("\\e ") == 0) {
+            handle_env(command);
+        } else if (command.find("\\l ") == 0) {
+            handle_partition_info(command);
+        } else if (command == "\\cron") {
+            handle_cron(command);
+        } else if (command.find("\\mem ") == 0) {
+            handle_mem(command);
+        } else if (!command.empty()) {
+            history.push_back(command);
+            handle_execute(command);
+        }
+        cout << "$ ";
+    }
+    save_history();
+    return 0;
+}
