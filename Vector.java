@@ -1,33 +1,66 @@
-import java.util.Scanner;
+class Vector {
+    private int[] data;
 
-public class Vector {
-    private int []v;
-    Vector(int size)
-    {
-        Scanner in=new Scanner(System.in);
-        v=new int[size];
-        for(int i=0;i<v.length;i++)
-            v[i]=in.nextInt();
+    Vector(int size) {
+        data = new int[size];
     }
-    void Print(){
-        for(int i=0;i<v.length;i++)
-            System.out.print(v[i]+" ");
+
+    Vector(int[] data) {
+        this.data = data;
     }
-    void Um(int x){
-        for(int i=0;i<v.length;i++)
-            v[i]*=x;
-    }
-    void Del(int x){
-        for(int i=0;i<v.length;i++)
-            v[i]/=x;
-    }
-    int getEl(int x){
-        if(x>=0 && x<v.length)
-        {
-            return v[x];
+
+    int get(int index) {
+        if (index < 0 || index >= data.length) {
+            System.out.println("Индекс вне границ массива.");
         }
-        else{
-        System.out.println("Выход за границы");
-        return 0;}
+        return data[index];
+    }
+
+    void set(int index, int value) {
+        if (index < 0 || index >= data.length) {
+            System.out.println("Индекс вне границ массива.");
+        }
+        data[index] = value;
+    }
+
+    void add(Vector other) {
+        if (data.length != other.data.length) {
+            System.out.println("Размеры векторов должны быть одинаковыми.");
+        }
+        for (int i = 0; i < data.length; i++) {
+            data[i] += other.data[i];
+        }
+    }
+
+    void subtract(Vector other) {
+        if (data.length != other.data.length) {
+            System.out.println("Размеры векторов должны быть одинаковыми.");
+        }
+        for (int i = 0; i < data.length; i++) {
+            data[i] -= other.data[i];
+        }
+    }
+
+    void multiply(int scalar) {
+        for (int i = 0; i < data.length; i++) {
+            data[i] *= scalar;
+        }
+    }
+
+    void divide(int scalar) {
+        if (scalar == 0) {
+            System.out.println("Деление на ноль.");
+        }
+        for (int i = 0; i < data.length; i++) {
+            data[i] /= scalar;
+        }
+    }
+
+    void print() {
+        int i=0;
+        System.out.print("[");
+        for(i=0;i< data.length-1;i++)
+            System.out.print(data[i]+", ");
+        System.out.print(data[i]+"]"+"\n");
     }
 }
