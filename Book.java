@@ -1,3 +1,4 @@
+import java.util.Comparator;
 public class Book {
     private int price;
     private int age;
@@ -26,4 +27,14 @@ public class Book {
     void Print(){
         System.out.println("Название книги:"+NameBook+"\nАвтор: "+author+"\nГод: "+age+"\nКол-во страниц: "+cpage+"\nСтоимость: "+price);
     }
+    public static Comparator<Book> kolComparator=new Comparator<Book>(){
+        public int compare(Book b1, Book b2){
+            return b1.getCpage()-b2.getCpage();
+        }
+    };
+    public static Comparator<Book> authorComparator=new Comparator<Book>(){
+        public int compare(Book b1,Book b2){
+            return b1.getAuthor().compareTo(b2.getAuthor());
+        }
+    };
 }
