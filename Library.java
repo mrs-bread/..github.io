@@ -25,4 +25,10 @@ public class Library {
         }
         else System.out.println("Нет такой книги");
     }
+    void SortByStr(){
+        a.sort(Book.kolComparator);
+    }
+    void SortByAuthor(){
+        a.sort(Book.authorComparator);
+    }
 }
