@@ -29,7 +29,7 @@ Graph generateRandomGraph(int n) {
 Graph createIsomorphicGraph(const Graph& graph) {
     int n = graph.size();
     vector<int> permutation(n);
-    for (int i = 0; i < n; ++i) permutation[i] = i;
+    iota(permutation.begin(), permutation.end(), 0);
 
     random_device rd;
     mt19937 g(rd());
@@ -62,36 +62,38 @@ bool areIsomorphic(const Graph& graph1, const Graph& graph2) {
 
     vector<int> degrees1 = getDegrees(graph1);
     vector<int> degrees2 = getDegrees(graph2);
-
     if (degrees1 != degrees2) return false;
 
     vector<int> permutation(n);
     iota(permutation.begin(), permutation.end(), 0);
+    vector<vector<int>> permutations;
+    do {
+        permutations.push_back(permutation);
+    } while (next_permutation(permutation.begin(), permutation.end()));
 
     bool foundIsomorphism = false;
     critical_section cs;
 
-    parallel_for_each(permutation_iterator<int*>(permutation.begin(), permutation.begin()),
-                      permutation_iterator<int*>(permutation.begin(), permutation.end()),
-                      [&](const vector<int>& currentPermutation) {
-                          Graph permutedGraph(n, vector<bool>(n, false));
-                          for (int u = 0; u < n; ++u) {
-                              for (int v = 0; v < n; ++v) {
-                                  permutedGraph[u][v] = graph1[currentPermutation[u]][currentPermutation[v]];
-                              }
-                          }
+    parallel_for(0, permutations.size(), [&](int i) {
+        const vector<int>& currentPermutation = permutations[i];
+        Graph permutedGraph(n, vector<bool>(n, false));
+        for (int u = 0; u < n; ++u) {
+            for (int v = 0; v < n; ++v) {
+                permutedGraph[u][v] = graph1[currentPermutation[u]][currentPermutation[v]];
+            }
+        }
 
-                          if (permutedGraph == graph2) {
-                              lock_guard<critical_section> lock(cs);
-                              foundIsomorphism = true;
-                          }
-                      });
+        if (permutedGraph == graph2) {
+            lock_guard<critical_section> lock(cs);
+            foundIsomorphism = true;
+        }
+    });
 
     return foundIsomorphism;
 }
 
 int main() {
-    for (int n = 4; n <= 10; n += 2) { // Уменьшенный диапазон для демонстрации -  n! растет очень быстро
+    for (int n = 4; n <= 8; n += 2) { // Уменьшенный диапазон для демонстрации - n! растет очень быстро
         Graph graph1 = generateRandomGraph(n);
         Graph graph2 = createIsomorphicGraph(graph1);
 
