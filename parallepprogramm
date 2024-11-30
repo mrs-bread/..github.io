@@ -1,0 +1,114 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <random>
+#include <chrono>
+#include <ppl.h>
+#include <mutex>
+#include <numeric>
+
+using namespace std;
+using namespace concurrency;
+
+typedef vector<vector<bool>> Graph;
+
+Graph generateRandomGraph(int n) {
+    Graph graph(n, vector<bool>(n, false));
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> distrib(0, 1);
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = i + 1; j < n; ++j) {
+            graph[i][j] = graph[j][i] = (distrib(gen) == 1);
+        }
+    }
+    return graph;
+}
+
+Graph createIsomorphicGraph(const Graph& graph) {
+    int n = graph.size();
+    vector<int> permutation(n);
+    for (int i = 0; i < n; ++i) permutation[i] = i;
+
+    random_device rd;
+    mt19937 g(rd());
+    shuffle(permutation.begin(), permutation.end(), g);
+
+    Graph isomorphicGraph(n, vector<bool>(n, false));
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            isomorphicGraph[permutation[i]][permutation[j]] = graph[i][j];
+        }
+    }
+    return isomorphicGraph;
+}
+
+vector<int> getDegrees(const Graph& graph) {
+    int n = graph.size();
+    vector<int> degrees(n, 0);
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (graph[i][j]) degrees[i]++;
+        }
+    }
+    sort(degrees.begin(), degrees.end());
+    return degrees;
+}
+
+bool areIsomorphic(const Graph& graph1, const Graph& graph2) {
+    int n = graph1.size();
+    if (n != graph2.size()) return false;
+
+    vector<int> degrees1 = getDegrees(graph1);
+    vector<int> degrees2 = getDegrees(graph2);
+
+    if (degrees1 != degrees2) return false;
+
+    vector<int> permutation(n);
+    iota(permutation.begin(), permutation.end(), 0);
+
+    bool foundIsomorphism = false;
+    critical_section cs;
+
+    parallel_for_each(permutation_iterator<int*>(permutation.begin(), permutation.begin()),
+                      permutation_iterator<int*>(permutation.begin(), permutation.end()),
+                      [&](const vector<int>& currentPermutation) {
+                          Graph permutedGraph(n, vector<bool>(n, false));
+                          for (int u = 0; u < n; ++u) {
+                              for (int v = 0; v < n; ++v) {
+                                  permutedGraph[u][v] = graph1[currentPermutation[u]][currentPermutation[v]];
+                              }
+                          }
+
+                          if (permutedGraph == graph2) {
+                              lock_guard<critical_section> lock(cs);
+                              foundIsomorphism = true;
+                          }
+                      });
+
+    return foundIsomorphism;
+}
+
+int main() {
+    for (int n = 4; n <= 10; n += 2) { // Уменьшенный диапазон для демонстрации -  n! растет очень быстро
+        Graph graph1 = generateRandomGraph(n);
+        Graph graph2 = createIsomorphicGraph(graph1);
+
+        auto start_single = chrono::high_resolution_clock::now();
+        bool isomorphic_single = areIsomorphic(graph1, graph2);
+        auto end_single = chrono::high_resolution_clock::now();
+        auto duration_single = chrono::duration_cast<chrono::milliseconds>(end_single - start_single);
+
+        auto start_ppl = chrono::high_resolution_clock::now();
+        bool isomorphic_ppl = areIsomorphic(graph1, graph2);
+        auto end_ppl = chrono::high_resolution_clock::now();
+        auto duration_ppl = chrono::duration_cast<chrono::milliseconds>(end_ppl - start_ppl);
+
+        cout << "Графы размера " << n << ":" << endl;
+        cout << "Однопоточный: " << isomorphic_single << " (" << duration_single.count() << " мс)" << endl;
+        cout << "PPL: " << isomorphic_ppl << " (" << duration_ppl.count() << " мс)" << endl;
+        cout << "--------------------" << endl;
+    }
+    return 0;
+}
