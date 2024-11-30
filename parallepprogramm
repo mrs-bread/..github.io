@@ -74,11 +74,10 @@ bool areIsomorphic(const Graph& graph1, const Graph& graph2) {
     bool foundIsomorphism = false;
     critical_section cs;
 
-    parallel_for(0, permutations.size(), [&](int i) {
+    parallel_for(0, (int)permutations.size(), [&](int i) {
         const vector<int>& currentPermutation = permutations[i];
         Graph permutedGraph(n, vector<bool>(n, false));
-        for (int u = 0; u < n; ++u) {
-            for (int v = 0; v < n; ++v) {
+        for (int u = 0; u < n; ++u) {            for (int v = 0; v < n; ++v) {
                 permutedGraph[u][v] = graph1[currentPermutation[u]][currentPermutation[v]];
             }
         }
@@ -93,7 +92,7 @@ bool areIsomorphic(const Graph& graph1, const Graph& graph2) {
 }
 
 int main() {
-    for (int n = 4; n <= 8; n += 2) { // Уменьшенный диапазон для демонстрации - n! растет очень быстро
+    for (int n = 4; n <= 6; n += 2) { //  Уменьшенный диапазон для демонстрации
         Graph graph1 = generateRandomGraph(n);
         Graph graph2 = createIsomorphicGraph(graph1);
 
@@ -110,7 +109,6 @@ int main() {
         cout << "Графы размера " << n << ":" << endl;
         cout << "Однопоточный: " << isomorphic_single << " (" << duration_single.count() << " мс)" << endl;
         cout << "PPL: " << isomorphic_ppl << " (" << duration_ppl.count() << " мс)" << endl;
-        cout << "--------------------" << endl;
-    }
-    return 0;
+        cout << "--------------------" << endl;}
+return 0;
 }
