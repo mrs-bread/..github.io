@@ -8,17 +8,19 @@ businessCard.style.transform = `scale(${scaleFactor})`;
 planRow.addEventListener('mouseover', (event) => {
     if (event.target.classList.contains('plan-card')) {
         if (event.target !== businessCard) {
-            businessCard.style.transform = 'scale(1)'; // Уменьшаем центральную
-            event.target.style.transform = `scale(${scaleFactor})`; // Увеличиваем ту, на которую навели
+            businessCard.style.transform = 'scale(1)';
+            event.target.style.transform = `scale(${scaleFactor})`;
         }
     }
 });
 
-planRow.addEventListener('mouseout', () => {
-    businessCard.style.transform = `scale(${scaleFactor})`; // Восстанавливаем масштаб центральной
-    // Обрабатываем другие карточки
-    Array.from(planRow.querySelectorAll('.plan-card:not(#business)')).forEach(card => {
-        card.style.transform = 'scale(1)'; // Возвращаем стандартный масштаб
-    });
+planRow.addEventListener('mouseout', (event) => {
+    if(event.relatedTarget === null || !event.relatedTarget.closest('.plan-card')){
+        businessCard.style.transform = `scale(${scaleFactor})`;
+        Array.from(planRow.querySelectorAll('.plan-card:not(#business)')).forEach(card => {
+            card.style.transform = 'scale(1)';
+        });
+    }
 });
+=
 
