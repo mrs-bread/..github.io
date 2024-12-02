@@ -1,0 +1,82 @@
+/* Global color variables */
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #343a40;
+  --background-color: #f8f9fa;
+  --border-color: #ced4da;
+  --plan-background-start: #f8f9fa;
+  --plan-background-business: #e9ecef;
+  --plan-background-vip: #d1e7dd;
+}
+
+body {
+  font-family: sans-serif;
+  background-color: var(--background-color);
+  background-image: url('path/to/your/background.jpg'); /* Замените на путь к вашему фоновому изображению */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+
+.plan {
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  transition: transform 0.3s ease;
+}
+
+#start {
+  background-color: var(--plan-background-start);
+}
+
+#business {
+  background-color: var(--plan-background-business);
+}
+
+#vip {
+  background-color: var(--plan-background-vip);
+}
+
+.plan:hover {
+  transform: scale(1.05);
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.plan h2 {
+  color: var(--secondary-color);
+}
+
+.plan ul li {
+  position: relative;
+  padding-left: 25px;
+  line-height: 1.8;
+  color: var(--secondary-color);
+}
+
+.plan ul li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url('path/to/your/check.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-primary:hover, .btn-danger:hover {
+  opacity: 0.8;
+}
