@@ -1,0 +1,103 @@
+#include <amp.h>
+#include <iostream>
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <chrono>
+using namespace concurrency;
+using namespace std::chrono;
+std::vector<std::vector<float>> generateRandomMatrix(size_t rows, size_t cols, float minVal = 0.0f, float maxVal = 1.0f) {
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<>distrib(minVal, maxVal);
+	std::vector<std::vector<float>>matrix(rows, std::vector<float>(cols));
+	for (size_t i = 0; i < rows; ++i) {
+		for (size_t j = 0; j < cols; ++j) {
+			matrix[i][j] = distrib(gen);
+		}
+	}
+	return matrix;
+}
+
+std::vector<std::vector<float>> multiplyMatrixAMP(const std::vector<std::vector<float>>& matrixA, const std::vector<std::vector<float>>& matrixB) {
+	if (matrixA.empty() || matrixB.empty() || matrixA[0].size() != matrixB.size()) {
+		throw std::runtime_error("Несовместимые размеры матриц для умножения");
+	}
+
+	size_t rowsA = matrixA.size();
+	size_t colsA = matrixA[0].size();
+	size_t colsB = matrixB[0].size();
+
+	std::vector<float>flatA(rowsA * colsA);
+	std::vector<float> flatB(colsA * colsB);
+	std::vector<float> flatC(rowsA * colsB, 0.0f);
+
+	size_t k = 0;
+	for (const auto& row : matrixA) {
+		for (float val : row) {
+			flatA[k++] = val;
+		}
+	}
+	k = 0;
+	for (const auto& row : matrixB) {
+		for (float val : row) {
+			flatB[k++] = val;
+		}
+	}
+	std::vector<std::vector<float>>result(rowsA, std::vector<float>(colsB));
+	array_view<float, 2> a(rowsA, colsA, flatA.data());
+	array_view<float, 2> b(colsA, colsB, flatB.data());
+	array_view<float, 2> c(rowsA, colsB, flatC.data());
+	parallel_for_each(c.extent, [=](index<2>idx) restrict(amp) {
+		float sum = 0.0f;
+		for (int k = 0; k < colsA; ++k) {
+			sum += a(idx[0], k) * b(k, idx[1]);
+		}
+		c[idx] = sum;
+		});
+	c.synchronize();
+	k = 0;
+	for (size_t i = 0; i < rowsA; i++) {
+		for (size_t j = 0; j < colsB; ++j) {
+			result[i][j] = flatC[k++];
+		}
+	}
+	return result;
+}
+
+int main() {
+	size_t rowsA = 2;
+	size_t colsA = 3;
+	size_t colsB = 2;
+	std::vector<std::vector<float>> matrixA = generateRandomMatrix(rowsA, colsA, 0.0f, 10.0f);
+	std::vector<std::vector<float>> matrixB = generateRandomMatrix(colsA, colsB, -5.0f, 5.0f);
+	try {
+		std::vector<std::vector<float>>result = multiplyMatrixAMP(matrixA, matrixB);
+		std::cout << "Matrix A: \n";
+		for (const auto& row : matrixA) {
+			for (float val : row) {
+				std::cout << val << " ";
+			}
+			std::cout << std::endl;
+		}
+		std::cout << "Matrix B: \n";
+		for (const auto& row : matrixB) {
+			for (float val : row) {
+				std::cout << val << " ";
+			}
+			std::cout << std::endl;
+		}
+		std::cout << "\n Matrix result: \n";
+		for (const auto& row : result) {
+			for (float val : row) {
+				std::cout << val << " ";
+			}
+			std::cout << std::endl;
+		}
+	}
+	catch (const std::runtime_error& error) {
+		std::cerr << "Ошибка: " << error.what() << std::endl;
+	}
+	return 0;
+
+}
